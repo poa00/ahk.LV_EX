@@ -4,6 +4,7 @@
 ; Tested with:    AHK 1.1.20.03 (A32/U32/U64)
 ; Tested on:      Win 8.1 (x64)
 ; Changelog:
+;     1.1.01.00/2016-04-28(just me     -  added LV_EX_GroupGetState contributed by Pulover.
 ;     1.1.00.00/2015-03-13/just me     -  added basic tile view support (suggested by toralf),
 ;                                         added basic (XP compatible) group view support,
 ;                                         revised code and made some minor changes.
@@ -278,6 +279,24 @@ LV_EX_GetView(HLV) {
    Static Views := {0x00: "Icon", 0x01: "Report", 0x02: "IconSmall", 0x03: "List", 0x04: "Tile"}
    SendMessage, 0x108F, 0, 0, , % "ahk_id " . HLV
    Return Views[ErrorLevel]
+}
+; ======================================================================================================================
+; LV_EX_GroupGetHeader - Gets the header text of a group by group ID
+; ======================================================================================================================
+LV_EX_GroupGetHeader(HLV, GroupID, MaxChars := 1024) {
+   ; LVM_GETGROUPINFO = 0x1095
+   Static SizeOfLVGROUP := (4 * 6) + (A_PtrSize * 4)
+   Static LVGF_HEADER := 0x00000001
+   Static OffHeader := 8
+   Static OffHeaderMax := 8 + A_PtrSize
+   VarSetCapacity(HeaderText, MaxChars * 2, 0)
+   VarSetCapacity(LVGROUP, SizeOfLVGROUP, 0)
+   NumPut(SizeOfLVGROUP, LVGROUP, 0, "UInt")
+   NumPut(LVGF_HEADER, LVGROUP, 4, "UInt")
+   NumPut(&HeaderText, LVGROUP, OffHeader, "Ptr")
+   NumPut(MaxChars, LVGROUP, OffHeaderMax, "Int")
+   SendMessage, 0x1095, %GroupID%, % &LVGROUP, , % "ahk_id " . HLV
+   Return StrGet(&HeaderText, MaxChars, "UTF-16")
 }
 ; ======================================================================================================================
 ; LV_EX_GroupGetState - Get group states (requires Win Vista+ for most states).
